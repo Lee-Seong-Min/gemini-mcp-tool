@@ -65,11 +65,6 @@ export async function executeCommand(
 
     const childProcess = spawn(resolvedCommand, sanitizedArgs, {
       env: process.env,
-<<<<<<< HEAD
-=======
-      // Windows requires spawning through the shell to resolve PATH correctly
-      // See: https://github.com/jamubc/gemini-mcp-tool/issues/9
->>>>>>> f91e2d3 (fix windows spawn)
       shell: process.platform === "win32",
       stdio: ["ignore", "pipe", "pipe"],
       cwd: process.cwd()
