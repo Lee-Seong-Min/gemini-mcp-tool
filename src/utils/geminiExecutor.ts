@@ -17,7 +17,8 @@ export async function executeGeminiCLI(
   model?: string,
   sandbox?: boolean,
   changeMode?: boolean,
-  onProgress?: (newOutput: string) => void
+  onProgress?: (newOutput: string) => void,
+  extraArgs?: string[]
 ): Promise<string> {
   let prompt_processed = prompt;
   
@@ -90,6 +91,7 @@ ${prompt_processed}
   const args = [];
   if (model) { args.push(CLI.FLAGS.MODEL, model); }
   if (sandbox) { args.push(CLI.FLAGS.SANDBOX); }
+  if (extraArgs) { args.push(...extraArgs); }
   
   // Pass prompt via -p flag for non-interactive mode (CLI v0.27+)
   // On Windows with shell:true, args are joined into a command string,

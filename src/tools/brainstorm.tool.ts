@@ -56,9 +56,9 @@ ${includeAnalysis ? '**Feasibility:** [1-5] | **Impact:** [1-5] | **Innovation:*
 
 ---
 
-**Before finalizing, review the list: remove near-duplicates and ensure each idea satisfies the constraints.**
+**IMPORTANT: Do NOT analyze any files, directories, or environment. Do NOT use any tools. Focus ONLY on the brainstorming challenge above and generate ideas immediately.**
 
-Begin brainstorming session:`;
+Generate the ${ideaCount} ideas now:`;
 
   return enhancedPrompt;
 }
@@ -165,7 +165,7 @@ export const brainstormTool: UnifiedTool = {
     // Report progress to user
     onProgress?.(`Generating ${ideaCount} ideas via ${methodology} methodology...`);
     
-    // Execute with Gemini
-    return await executeGeminiCLI(enhancedPrompt, model as string | undefined, false, false, onProgress);
+    // Execute with Gemini, using plan mode to prevent file/tool usage
+    return await executeGeminiCLI(enhancedPrompt, model as string | undefined, false, false, onProgress, ["--approval-mode", "plan"]);
   }
 };
