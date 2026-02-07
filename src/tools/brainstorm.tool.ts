@@ -165,7 +165,7 @@ export const brainstormTool: UnifiedTool = {
     // Report progress to user
     onProgress?.(`Generating ${ideaCount} ideas via ${methodology} methodology...`);
     
-    // Execute with Gemini, using plan mode to prevent file/tool usage
-    return await executeGeminiCLI(enhancedPrompt, model as string | undefined, false, false, onProgress, ["--approval-mode", "plan"]);
+    // Execute with Gemini, disable extensions to prevent file/tool analysis
+    return await executeGeminiCLI(enhancedPrompt, model as string | undefined, false, false, onProgress, ["--extensions", "none"]);
   }
 };
