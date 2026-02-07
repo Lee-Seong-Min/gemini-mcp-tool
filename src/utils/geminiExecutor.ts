@@ -17,7 +17,8 @@ export async function executeGeminiCLI(
   model?: string,
   sandbox?: boolean,
   changeMode?: boolean,
-  onProgress?: (newOutput: string) => void
+  onProgress?: (newOutput: string) => void,
+  cwd?: string
 ): Promise<string> {
   let prompt_processed = prompt;
   
@@ -99,7 +100,7 @@ ${prompt_processed}
   args.push(finalPrompt);
   
   try {
-    return await executeCommand(CLI.COMMANDS.GEMINI, args, onProgress);
+    return await executeCommand(CLI.COMMANDS.GEMINI, args, onProgress, cwd);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     if (errorMessage.includes(ERROR_MESSAGES.QUOTA_EXCEEDED) && model !== MODELS.FLASH) {
@@ -118,7 +119,7 @@ ${prompt_processed}
         
       fallbackArgs.push(fallbackPrompt);
       try {
-        const result = await executeCommand(CLI.COMMANDS.GEMINI, fallbackArgs, onProgress);
+        const result = await executeCommand(CLI.COMMANDS.GEMINI, fallbackArgs, onProgress, cwd);
         Logger.warn(`Successfully executed with ${MODELS.FLASH} fallback.`);
         await sendStatusMessage(STATUS_MESSAGES.FLASH_SUCCESS);
         return result;

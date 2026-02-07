@@ -1,10 +1,12 @@
 import { spawn } from "child_process";
 import { Logger } from "./logger.js";
+import { tmpdir } from "os";
 
 export async function executeCommand(
   command: string,
   args: string[],
-  onProgress?: (newOutput: string) => void
+  onProgress?: (newOutput: string) => void,
+  cwd?: string
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
@@ -14,6 +16,7 @@ export async function executeCommand(
       env: process.env,
       shell: process.platform === "win32",
       stdio: ["ignore", "pipe", "pipe"],
+      ...(cwd ? { cwd } : {}),
     });
 
     let stdout = "";
