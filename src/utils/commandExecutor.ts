@@ -5,7 +5,8 @@ export async function executeCommand(
   command: string,
   args: string[],
   onProgress?: (newOutput: string) => void,
-  cwd?: string
+  cwd?: string,
+  stdinData?: string
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
@@ -14,16 +15,22 @@ export async function executeCommand(
     const childProcess = spawn(command, args, {
       env: process.env,
       shell: process.platform === "win32",
-      stdio: ["ignore", "pipe", "pipe"],
+      stdio: [stdinData ? "pipe" : "ignore", "pipe", "pipe"],
       ...(cwd ? { cwd } : {}),
     });
+
+    // Write stdin data and close the stream
+    if (stdinData && childProcess.stdin) {
+      childProcess.stdin.write(stdinData);
+      childProcess.stdin.end();
+    }
 
     let stdout = "";
     let stderr = "";
     let isResolved = false;
     let lastReportedLength = 0;
     
-    childProcess.stdout.on("data", (data) => {
+    childProcess.stdout!.on("data", (data) => {
       stdout += data.toString();
       
       // Report new content if callback provided
@@ -36,7 +43,7 @@ export async function executeCommand(
 
 
     // CLI level errors
-    childProcess.stderr.on("data", (data) => {
+    childProcess.stderr!.on("data", (data) => {
       stderr += data.toString();
       // find RESOURCE_EXHAUSTED when gemini-2.5-pro quota is exceeded
       if (stderr.includes("RESOURCE_EXHAUSTED")) {

@@ -94,16 +94,13 @@ ${prompt_processed}
   if (sandbox) { args.push(CLI.FLAGS.SANDBOX); }
   if (extraArgs) { args.push(...extraArgs); }
   
-  // Pass prompt via -p flag for non-interactive mode (CLI v0.27+)
-  // On Windows with shell:true, args are joined into a command string,
-  // so we must quote the prompt to prevent word-splitting into positional args
-  const quotedPrompt = process.platform === "win32" 
-    ? `"${prompt_processed.replace(/"/g, '\\"')}"` 
-    : prompt_processed;
-  args.push(CLI.FLAGS.PROMPT, quotedPrompt);
+  // Use stdin pipe to deliver prompt, avoiding all shell escaping issues.
+  // -p " " activates non-interactive mode; actual prompt goes via stdin.
+  // Gemini CLI docs: "-p/--prompt: Appended to input on stdin (if any)"
+  args.push(CLI.FLAGS.PROMPT, " ");
   
   try {
-    return await executeCommand(CLI.COMMANDS.GEMINI, args, onProgress, cwd);
+    return await executeCommand(CLI.COMMANDS.GEMINI, args, onProgress, cwd, prompt_processed);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     if (errorMessage.includes(ERROR_MESSAGES.QUOTA_EXCEEDED) && model !== MODELS.FLASH) {
@@ -115,13 +112,10 @@ ${prompt_processed}
         fallbackArgs.push(CLI.FLAGS.SANDBOX);
       }
       
-      // Pass prompt via -p flag for non-interactive mode (CLI v0.27+)
-      const quotedFallback = process.platform === "win32"
-        ? `"${prompt_processed.replace(/"/g, '\\"')}"` 
-        : prompt_processed;
-      fallbackArgs.push(CLI.FLAGS.PROMPT, quotedFallback);
+      // Use stdin pipe for fallback too
+      fallbackArgs.push(CLI.FLAGS.PROMPT, " ");
       try {
-        const result = await executeCommand(CLI.COMMANDS.GEMINI, fallbackArgs, onProgress);
+        const result = await executeCommand(CLI.COMMANDS.GEMINI, fallbackArgs, onProgress, cwd, prompt_processed);
         Logger.warn(`Successfully executed with ${MODELS.FLASH} fallback.`);
         await sendStatusMessage(STATUS_MESSAGES.FLASH_SUCCESS);
         return result;
