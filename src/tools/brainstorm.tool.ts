@@ -2,7 +2,6 @@ import { z } from 'zod';
 import { UnifiedTool } from './registry.js';
 import { Logger } from '../utils/logger.js';
 import { executeGeminiCLI } from '../utils/geminiExecutor.js';
-import { tmpdir } from 'os';
 
 function buildBrainstormPrompt(config: {
   prompt: string;
@@ -167,6 +166,6 @@ export const brainstormTool: UnifiedTool = {
     onProgress?.(`Generating ${ideaCount} ideas via ${methodology} methodology...`);
     
     // Execute with Gemini
-    return await executeGeminiCLI(enhancedPrompt, model as string | undefined, false, false, onProgress, tmpdir());
+    return await executeGeminiCLI(enhancedPrompt, model as string | undefined, false, false, onProgress);
   }
 };

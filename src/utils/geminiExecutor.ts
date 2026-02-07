@@ -17,8 +17,7 @@ export async function executeGeminiCLI(
   model?: string,
   sandbox?: boolean,
   changeMode?: boolean,
-  onProgress?: (newOutput: string) => void,
-  cwd?: string
+  onProgress?: (newOutput: string) => void
 ): Promise<string> {
   let prompt_processed = prompt;
   
@@ -91,7 +90,6 @@ ${prompt_processed}
   const args = [];
   if (model) { args.push(CLI.FLAGS.MODEL, model); }
   if (sandbox) { args.push(CLI.FLAGS.SANDBOX); }
-  args.push("--output-format", "text");
   
   // Ensure @ symbols work cross-platform by wrapping in quotes if needed
   const finalPrompt = prompt_processed.includes('@') && !prompt_processed.startsWith('"') 
@@ -101,7 +99,7 @@ ${prompt_processed}
   args.push(finalPrompt);
   
   try {
-    return await executeCommand(CLI.COMMANDS.GEMINI, args, onProgress, cwd);
+    return await executeCommand(CLI.COMMANDS.GEMINI, args, onProgress);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     if (errorMessage.includes(ERROR_MESSAGES.QUOTA_EXCEEDED) && model !== MODELS.FLASH) {
@@ -120,7 +118,7 @@ ${prompt_processed}
         
       fallbackArgs.push(fallbackPrompt);
       try {
-        const result = await executeCommand(CLI.COMMANDS.GEMINI, fallbackArgs, onProgress, cwd);
+        const result = await executeCommand(CLI.COMMANDS.GEMINI, fallbackArgs, onProgress);
         Logger.warn(`Successfully executed with ${MODELS.FLASH} fallback.`);
         await sendStatusMessage(STATUS_MESSAGES.FLASH_SUCCESS);
         return result;
