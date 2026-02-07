@@ -91,6 +91,7 @@ ${prompt_processed}
   const args = [];
   if (model) { args.push(CLI.FLAGS.MODEL, model); }
   if (sandbox) { args.push(CLI.FLAGS.SANDBOX); }
+  args.push("--output-format", "text");
   
   // Ensure @ symbols work cross-platform by wrapping in quotes if needed
   const finalPrompt = prompt_processed.includes('@') && !prompt_processed.startsWith('"') 
