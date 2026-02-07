@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { UnifiedTool } from './registry.js';
 import { Logger } from '../utils/logger.js';
 import { executeGeminiCLI } from '../utils/geminiExecutor.js';
+import { tmpdir } from 'os';
 
 function buildBrainstormPrompt(config: {
   prompt: string;
@@ -165,7 +166,7 @@ export const brainstormTool: UnifiedTool = {
     // Report progress to user
     onProgress?.(`Generating ${ideaCount} ideas via ${methodology} methodology...`);
     
-    // Execute with Gemini, disable extensions to prevent file/tool analysis
-    return await executeGeminiCLI(enhancedPrompt, model as string | undefined, false, false, onProgress, ["--extensions", "none"]);
+    // Execute with Gemini, using tmpdir as CWD to prevent CLI from reading project files
+    return await executeGeminiCLI(enhancedPrompt, model as string | undefined, false, false, onProgress, undefined, tmpdir());
   }
 };

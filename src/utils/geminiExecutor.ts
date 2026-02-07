@@ -18,7 +18,8 @@ export async function executeGeminiCLI(
   sandbox?: boolean,
   changeMode?: boolean,
   onProgress?: (newOutput: string) => void,
-  extraArgs?: string[]
+  extraArgs?: string[],
+  cwd?: string
 ): Promise<string> {
   let prompt_processed = prompt;
   
@@ -102,7 +103,7 @@ ${prompt_processed}
   args.push(CLI.FLAGS.PROMPT, quotedPrompt);
   
   try {
-    return await executeCommand(CLI.COMMANDS.GEMINI, args, onProgress);
+    return await executeCommand(CLI.COMMANDS.GEMINI, args, onProgress, cwd);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     if (errorMessage.includes(ERROR_MESSAGES.QUOTA_EXCEEDED) && model !== MODELS.FLASH) {
