@@ -97,7 +97,7 @@ ${prompt_processed}
   // Use stdin pipe to deliver prompt, avoiding all shell escaping issues.
   // -p " " activates non-interactive mode; actual prompt goes via stdin.
   // Gemini CLI docs: "-p/--prompt: Appended to input on stdin (if any)"
-  args.push(CLI.FLAGS.PROMPT, " ");
+  args.push(CLI.FLAGS.PROMPT, ".");
   
   try {
     return await executeCommand(CLI.COMMANDS.GEMINI, args, onProgress, cwd, prompt_processed);
@@ -113,7 +113,7 @@ ${prompt_processed}
       }
       
       // Use stdin pipe for fallback too
-      fallbackArgs.push(CLI.FLAGS.PROMPT, " ");
+      fallbackArgs.push(CLI.FLAGS.PROMPT, ".");
       try {
         const result = await executeCommand(CLI.COMMANDS.GEMINI, fallbackArgs, onProgress, cwd, prompt_processed);
         Logger.warn(`Successfully executed with ${MODELS.FLASH} fallback.`);
