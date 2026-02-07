@@ -92,7 +92,12 @@ ${prompt_processed}
   if (sandbox) { args.push(CLI.FLAGS.SANDBOX); }
   
   // Pass prompt via -p flag for non-interactive mode (CLI v0.27+)
-  args.push(CLI.FLAGS.PROMPT, prompt_processed);
+  // On Windows with shell:true, args are joined into a command string,
+  // so we must quote the prompt to prevent word-splitting into positional args
+  const quotedPrompt = process.platform === "win32" 
+    ? `"${prompt_processed.replace(/"/g, '\\"')}"` 
+    : prompt_processed;
+  args.push(CLI.FLAGS.PROMPT, quotedPrompt);
   
   try {
     return await executeCommand(CLI.COMMANDS.GEMINI, args, onProgress);
@@ -108,7 +113,10 @@ ${prompt_processed}
       }
       
       // Pass prompt via -p flag for non-interactive mode (CLI v0.27+)
-      fallbackArgs.push(CLI.FLAGS.PROMPT, prompt_processed);
+      const quotedFallback = process.platform === "win32"
+        ? `"${prompt_processed.replace(/"/g, '\\"')}"` 
+        : prompt_processed;
+      fallbackArgs.push(CLI.FLAGS.PROMPT, quotedFallback);
       try {
         const result = await executeCommand(CLI.COMMANDS.GEMINI, fallbackArgs, onProgress);
         Logger.warn(`Successfully executed with ${MODELS.FLASH} fallback.`);
