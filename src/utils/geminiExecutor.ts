@@ -94,9 +94,9 @@ ${prompt_processed}
   if (sandbox) { args.push(CLI.FLAGS.SANDBOX); }
   if (extraArgs) { args.push(...extraArgs); }
   
-  // Use stdin pipe to deliver prompt, avoiding all shell escaping issues.
-  // -p " " activates non-interactive mode; actual prompt goes via stdin.
-  // Gemini CLI docs: "-p/--prompt: Appended to input on stdin (if any)"
+  // Prompt is delivered via stdin pipe, bypassing all shell escaping issues.
+  // "-p ." activates non-interactive (headless) mode; the actual prompt
+  // is piped through stdin. CLI appends -p value after stdin content.
   args.push(CLI.FLAGS.PROMPT, ".");
   
   try {
@@ -106,13 +106,10 @@ ${prompt_processed}
     if (errorMessage.includes(ERROR_MESSAGES.QUOTA_EXCEEDED) && model !== MODELS.FLASH) {
       Logger.warn(`${ERROR_MESSAGES.QUOTA_EXCEEDED}. Falling back to ${MODELS.FLASH}.`);
       await sendStatusMessage(STATUS_MESSAGES.FLASH_RETRY);
-      const fallbackArgs = [];
+      const fallbackArgs: string[] = [];
       fallbackArgs.push(CLI.FLAGS.MODEL, MODELS.FLASH);
-      if (sandbox) {
-        fallbackArgs.push(CLI.FLAGS.SANDBOX);
-      }
-      
-      // Use stdin pipe for fallback too
+      if (sandbox) { fallbackArgs.push(CLI.FLAGS.SANDBOX); }
+      if (extraArgs) { fallbackArgs.push(...extraArgs); }
       fallbackArgs.push(CLI.FLAGS.PROMPT, ".");
       try {
         const result = await executeCommand(CLI.COMMANDS.GEMINI, fallbackArgs, onProgress, cwd, prompt_processed);

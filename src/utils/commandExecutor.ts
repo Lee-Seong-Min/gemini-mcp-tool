@@ -1,5 +1,7 @@
-import { spawn } from "child_process";
+import { spawn, ChildProcess } from "child_process";
 import { Logger } from "./logger.js";
+
+const PROCESS_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 
 export async function executeCommand(
   command: string,
@@ -21,6 +23,12 @@ export async function executeCommand(
 
     // Write stdin data and close the stream
     if (stdinData && childProcess.stdin) {
+      childProcess.stdin.on("error", (err) => {
+        // EPIPE is expected if process exits before stdin is fully written
+        if ((err as NodeJS.ErrnoException).code !== "EPIPE") {
+          Logger.error(`stdin write error: ${err.message}`);
+        }
+      });
       childProcess.stdin.write(stdinData);
       childProcess.stdin.end();
     }
@@ -29,11 +37,20 @@ export async function executeCommand(
     let stderr = "";
     let isResolved = false;
     let lastReportedLength = 0;
-    
+
+    // Timeout guard: kill process if it runs too long
+    const timeout = setTimeout(() => {
+      if (!isResolved) {
+        isResolved = true;
+        childProcess.kill("SIGTERM");
+        Logger.error(`Process timed out after ${PROCESS_TIMEOUT_MS / 1000}s`);
+        reject(new Error(`Process timed out after ${PROCESS_TIMEOUT_MS / 1000} seconds`));
+      }
+    }, PROCESS_TIMEOUT_MS);
+
     childProcess.stdout!.on("data", (data) => {
       stdout += data.toString();
-      
-      // Report new content if callback provided
+
       if (onProgress && stdout.length > lastReportedLength) {
         const newContent = stdout.substring(lastReportedLength);
         lastReportedLength = stdout.length;
@@ -41,11 +58,8 @@ export async function executeCommand(
       }
     });
 
-
-    // CLI level errors
     childProcess.stderr!.on("data", (data) => {
       stderr += data.toString();
-      // find RESOURCE_EXHAUSTED when gemini-2.5-pro quota is exceeded
       if (stderr.includes("RESOURCE_EXHAUSTED")) {
         const modelMatch = stderr.match(/Quota exceeded for quota metric '([^']+)'/);
         const statusMatch = stderr.match(/status["\s]*[:=]\s*(\d+)/);
@@ -58,25 +72,29 @@ export async function executeCommand(
             code: parseInt(status),
             message: `GMCPT: --> Quota exceeded for ${model}`,
             details: {
-              model: model,
-              reason: reason,
-              statusText: "Too Many Requests -- > try using gemini-2.5-flash by asking",
+              model,
+              reason,
+              statusText: "Too Many Requests --> try using gemini-2.5-flash by asking",
             }
           }
         };
         Logger.error(`Gemini Quota Error: ${JSON.stringify(errorJson, null, 2)}`);
       }
     });
+
     childProcess.on("error", (error) => {
       if (!isResolved) {
         isResolved = true;
+        clearTimeout(timeout);
         Logger.error(`Process error:`, error);
         reject(new Error(`Failed to spawn command: ${error.message}`));
       }
     });
+
     childProcess.on("close", (code) => {
       if (!isResolved) {
         isResolved = true;
+        clearTimeout(timeout);
         if (code === 0) {
           Logger.commandComplete(startTime, code, stdout.length);
           resolve(stdout.trim());

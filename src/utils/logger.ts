@@ -1,4 +1,4 @@
-// WIP
+
 import { LOG_PREFIX } from "../constants.js";
 
 export class Logger {
@@ -34,6 +34,11 @@ export class Logger {
     this.warn(`[${startTime}] Starting: ${command} ${args.map((arg) => `"${arg}"`).join(" ")}`);
     
     // Store command execution start for timing analysis
+    // Guard against unbounded growth if commandComplete is never called
+    if (this._commandStartTimes.size > 100) {
+      const oldest = [...this._commandStartTimes.keys()].sort()[0];
+      this._commandStartTimes.delete(oldest);
+    }
     this._commandStartTimes.set(startTime, { command, args, startTime });
   }
 

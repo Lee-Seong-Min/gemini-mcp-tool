@@ -15,8 +15,7 @@ function buildBrainstormPrompt(config: {
 }): string {
   const { prompt, methodology, domain, constraints, existingContext, ideaCount, includeAnalysis } = config;
   
-  // Select methodology framework
-  let frameworkInstructions = getMethodologyInstructions(methodology, domain);
+  const frameworkInstructions = getMethodologyInstructions(methodology, domain);
   
   let enhancedPrompt = `# BRAINSTORMING SESSION
 
@@ -151,14 +150,14 @@ export const brainstormTool: UnifiedTool = {
       throw new Error("You must provide a valid brainstorming challenge or question to explore");
     }
 
-    let enhancedPrompt = buildBrainstormPrompt({
-      prompt: prompt.trim() as string,
-      methodology: methodology as string,
-      domain: domain as string | undefined,
-      constraints: constraints as string | undefined,
-      existingContext: existingContext as string | undefined,
-      ideaCount: ideaCount as number,
-      includeAnalysis: includeAnalysis as boolean
+    const enhancedPrompt = buildBrainstormPrompt({
+      prompt: prompt.trim(),
+      methodology,
+      domain,
+      constraints,
+      existingContext,
+      ideaCount,
+      includeAnalysis
     });
 
     Logger.debug(`Brainstorm: Using methodology '${methodology}' for domain '${domain || 'general'}'`);
@@ -167,6 +166,6 @@ export const brainstormTool: UnifiedTool = {
     onProgress?.(`Generating ${ideaCount} ideas via ${methodology} methodology...`);
     
     // Execute with Gemini, using tmpdir as CWD to prevent CLI from reading project files
-    return await executeGeminiCLI(enhancedPrompt, model as string | undefined, false, false, onProgress, undefined, tmpdir());
+    return await executeGeminiCLI(enhancedPrompt, model, false, false, onProgress, undefined, tmpdir());
   }
 };

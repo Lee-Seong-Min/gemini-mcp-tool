@@ -69,7 +69,7 @@ export const CLI = {
     MODEL: "-m",
     SANDBOX: "-s",
     PROMPT: "-p",
-    HELP: "-help",
+    HELP: "--help",
   },
   // Default values
   DEFAULTS: {
